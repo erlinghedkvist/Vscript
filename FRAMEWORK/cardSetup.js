@@ -307,6 +307,7 @@ module.exports = function () {
 	/**
 	* Setup function for the network interfaces
 	* @param {object} config - The object containing the configuration parameters
+	* @param {string} [config.hostname] - The hostname for the module (will e.g. be used as the prompt in the terminal, the name in the V__script GUI, and the system name in LLDP)
 	* @param {string} [config.mode] - The interface mode; "40gbe" | "10gbe"
 	* @param {string} [config.front_mgmt] - The IP and prefix for the front management port; "A.B.C.D/X"
 	* @param {string} [config.rear_mgmt] - The IP and prefix for the rear management port; "A.B.C.D/X"
@@ -322,6 +323,10 @@ module.exports = function () {
 			return -1;
 		}
 		if (config.hasOwnProperty("network_config")) { config = config.network_config; }
+
+		if (config.hasOwnProperty("hostname")) {
+			await this.write("network_interfaces.hostname", "ip_address", config.hostname, { ip: this.ip });
+		}
 
 		let numInterfaces;
 		// Set the number of interfaces to configure based on 40GbE/10GbE
