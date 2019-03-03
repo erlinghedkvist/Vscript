@@ -404,7 +404,17 @@ module.exports = function () {
 			if (this.running_is_newer_than_or_same_as([1,8,232])) { await this.write("time_flows.combinators[0]", "quorum_command", 1, { ip: this.ip }); }
 			await this.write("p_t_p_clock", "input_command", "time_flows.combinators[0].output", { ip: this.ip });
 		} //
+
+		await this.write("system_clock", "input", "p_t_p_clock.output", { ip: this.ip });
+		if (config.utc === "Ignore") {
+			await vscript.create_table_row("time_flows.shifters", { desired_name: "UTC_shifter", ip: this.ip} );
+			await this.write("time_flows.shifters[0]", "input_command", "p_t_p_clock.output", { ip: this.ip });
+			await this.write("time_flows.shifters[0]", "shift", -37000000000, { ip: this.ip });
+			await this.write("system_clock", "input", "time_flows.shifters[0].output", { ip: this.ip });
+		}
+
 		if (config.hasOwnProperty("BB")) {
+			await this.write("system_clock", "input", null, { ip: this.ip });
 			await this.write("p_t_p_clock", "input_command", config.BB, { ip: this.ip });
 		}
 		this.verbose("Finished ptp_setup()...", 20);
