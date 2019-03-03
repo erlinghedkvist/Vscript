@@ -307,6 +307,7 @@ module.exports = function () {
 	/**
 	* Setup function for the network interfaces
 	* @param {object} config - The object containing the configuration parameters
+	* @param {string} [config.hostname] - The hostname for the module (will e.g. be used as the prompt in the terminal, the name in the V__script GUI, and the system name in LLDP)
 	* @param {string} [config.mode] - The interface mode; "40gbe" | "10gbe"
 	* @param {string} [config.front_mgmt] - The IP and prefix for the front management port; "A.B.C.D/X"
 	* @param {string} [config.rear_mgmt] - The IP and prefix for the rear management port; "A.B.C.D/X"
@@ -322,6 +323,10 @@ module.exports = function () {
 			return -1;
 		}
 		if (config.hasOwnProperty("network_config")) { config = config.network_config; }
+
+		if (config.hasOwnProperty("hostname")) {
+			await this.write("network_interfaces.hostname", "ip_address", config.hostname, { ip: this.ip });
+		}
 
 		let numInterfaces;
 		// Set the number of interfaces to configure based on 40GbE/10GbE
@@ -404,7 +409,17 @@ module.exports = function () {
 			if (this.running_is_newer_than_or_same_as([1,8,232])) { await this.write("time_flows.combinators[0]", "quorum_command", 1, { ip: this.ip }); }
 			await this.write("p_t_p_clock", "input_command", "time_flows.combinators[0].output", { ip: this.ip });
 		} //
+
+		await this.write("system_clock", "input", "p_t_p_clock.output", { ip: this.ip });
+		if (config.utc === "Ignore") {
+			await vscript.create_table_row("time_flows.shifters", { desired_name: "UTC_shifter", ip: this.ip} );
+			await this.write("time_flows.shifters[0]", "input_command", "p_t_p_clock.output", { ip: this.ip });
+			await this.write("time_flows.shifters[0]", "shift", -37000000000, { ip: this.ip });
+			await this.write("system_clock", "input", "time_flows.shifters[0].output", { ip: this.ip });
+		}
+
 		if (config.hasOwnProperty("BB")) {
+			await this.write("system_clock", "input", null, { ip: this.ip });
 			await this.write("p_t_p_clock", "input_command", config.BB, { ip: this.ip });
 		}
 		this.verbose("Finished ptp_setup()...", 20);

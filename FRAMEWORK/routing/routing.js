@@ -461,6 +461,7 @@ let _generateJSON = function() {
 				config.system_config.fpga = _readParameter(el, "fpga");
 				config.network_config.mode = (config.system_config.fpga.endsWith("40GbE") ? "40gbe" : "10gbe");
 				if (_readParameter(el, "update-ips")) {
+					config.network_config.hostname = _readParameter(el, "hostname");
 					config.network_config.front_mgmt = _readParameter(el, "front-mgmt");
 					config.network_config.rear_mgmt = _readParameter(el, "rear-mgmt");
 					config.network_config.addresses = [];
@@ -637,6 +638,7 @@ let _createFromJSON = function(obj) {
 				_setParameter(el, "reset", obj.system_config.reset);
 				_setParameter(el, "fpga", obj.system_config.fpga);
 				if (obj.network_config.hasOwnProperty("addresses")) {
+					_setParameter(el, "hostname", obj.network_config.hostname);
 					_setParameter(el, "front-mgmt", obj.network_config.front_mgmt);
 					_setParameter(el, "rear-mgmt", obj.network_config.rear_mgmt);
 					_setParameter(el, "left-qsfp", obj.network_config.addresses.slice(0,(obj.network_config.addresses.length / 2)).join(","));
@@ -726,6 +728,7 @@ let blockProto = {
 			{id: "fpga", name: "FPGA", type: "select", value: ["STREAMING_40GbE", "STREAMING","MULTIVIEWER_40GbE", "MULTIVIEWER"], text: ["Streaming (40GbE)", "Streaming (4x10GbE)","Multiviewer (40GbE)", "Multiviewer (4x10GbE)"]},
 			{id: "reset", name: "Reset card before configuration", type: "checkbox", value: false},
 			{id: "update-ips", name: "Change IP addresses", type: "checkbox", value: false},
+			{id: "hostname", name: "Hostname", type: "text", value:"V__matrix"},
 			{id: "front-mgmt", name: "Front management IP", type: "text", value:"10.3.143.33/20"},
 			{id: "rear-mgmt", name: "Rear management IP", type: "text", value: "10.3.143.34/20"},
 			{id: "left-qsfp", name: "Left QSFP IPs", type: "text", value: "192.168.50.43/16,10.0.0.2/24,10.0.0.3/24,10.0.0.4/24"},
